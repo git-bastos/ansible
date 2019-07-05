@@ -1,0 +1,85 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_prompt:
+    - name: "vcenter_hostname"
+      prompt: "Rentre le nom/IP du Vcenter?"
+      private: no
+    - name: "vcenter_username"
+      prompt: "Rentre le login du vcenter"
+      private: no
+    - name: "vcenter_password"
+      prompt: "Rentre le mdp du login vcenter"
+      private: yes
+    - name: "esxi_hostname"
+      prompt: "Choisis l'IP/NOM de l'ESX"
+      private: no
+    - name: "template"
+      prompt: "Template à choisisr"
+      private: no 
+    - name: "guest"
+      prompt: "Choisis le nom de la VM sur l'esx"
+      private: no
+    - name: "disk"
+      prompt: "Choisis la capacité de disk (thin par def)"
+      private: no
+    - name: "memory"
+      prompt: "Choisis la capacité de mémoire RAM"
+      private: no
+    - name: "cpu"
+      prompt: "Choisis le nombre de cpu que tu souhaite"
+      private: no          
+    - name: "notes"
+      prompt: "VM notes"
+      private: no
+      default: "Deployed with ansible"
+#    - name: "inventory_hostname"
+#      prompt: "rentre le nom de ta vm"
+#      private: no
+#    - name: "ansible_host_group"
+#      prompt: "le groupe d'hote de ta vm sur ansible"
+#      private: no
+
+  tasks:
+  # get date
+  - set_fact: creationdate="{{lookup('pipe','date "+%Y/%m/%d %H:%M"')}}"
+  # Create a VM from a template
+  - name: create the VM
+    vmware_guest:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      esxi_hostname: "{{ esxi_hostname }}"
+      datacenter: 'Siege'
+      folder: Machine virtuelle Active
+      name: "{{ guest }}"
+      state: poweredon
+#      template: "{{ template }}"
+      guest_id: rhel7_64Guest
+      annotation: "{{ notes }} - {{ creationdate }}"
+      disk:
+      - size_gb: "{{ disk }}"
+        type: thin
+        datastore: Datastore_ISCSI
+      networks:
+      - name: Serveur Vlan 500
+        device_type: e1000
+      hardware:
+        memory_mb: "{{ memory }}"
+        num_cpus: "{{ cpu}}"
+      customization:
+        dns_servers:
+        - 10.81.4.100
+        - 10.113.120.100
+        domain : reseau-ges.local
+        hostname: '{{ inventory_hostname }}'
+      template: "{{ template }}"
+      wait_for_ip_address: yes
+  - name: add to ansible hosts file
+    lineinfile:
+      dest: /etc/ansible/hosts
+      insertafter: '^\[{{ ansible_host_group }}\]'
+      line: '{{ inventory_hostname }}'
+...

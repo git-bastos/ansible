@@ -1,0 +1,66 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_prompt:
+    - name: "vcenter_hostname"
+      prompt: "Rentre le nom/IP du Vcenter?"
+      private: no
+    - name: "vcenter_username"
+      prompt: "Rentre le login du vcenter"
+      private: no
+    - name: "vcenter_password"
+      prompt: "Rentre le mdp du login vcenter"
+      private: yes
+    - name: "esxi_hostname"
+      prompt: "Choisis l'IP/NOM de l'ESX"
+      private: no
+    - name: "template"
+      prompt: "Template à choisisr"
+      private: no 
+    - name: "guest"
+      prompt: "Choisis le nom de la VM"
+      private: no
+    - name: "disk"
+      prompt: "Choisis la capacité de disk (thin par def)"
+      private: no
+    - name: "memory"
+      prompt: "Choisis la capacité de mémoire RAM"
+      private: no
+    - name: "cpu"
+      prompt: "Choisis le nombre de cpu que tu souhaite"
+      private: no          
+    - name: "notes"
+      prompt: "VM notes"
+      private: no
+      default: "Deployed with ansible"
+  tasks:
+  # get date
+  - set_fact: creationdate="{{lookup('pipe','date "+%Y/%m/%d %H:%M"')}}"
+  # Create a VM from a template
+  - name: create the VM
+    vmware_guest:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      esxi_hostname: "{{ esxi_hostname }}"
+      datacenter: 'Siege'
+      folder: Machine virtuelle Active
+      name: "{{ guest }}"
+      state: poweredon
+      template: "{{ template }}"
+      guest_id: rhel7_64Guest
+      annotation: "{{ notes }} - {{ creationdate }}"
+      disk:
+      - size_gb: "{{ disk }}"
+        type: thin
+        datastore: Datastore_ISCSI
+      networks:
+      - name: Serveur Vlan 500
+        device_type: e1000
+      hardware:
+        memory_mb: "{{ memory }}"
+        num_cpus: "{{ cpu}}"
+      wait_for_ip_address: yes
+...

@@ -1,0 +1,23 @@
+# La base centOS7
+---
+- hosts: centos
+  tasks: 
+    - name: Update de centOS7
+      yum: name=* state=latest
+    - name: Installation du paquet OPEN-vm-tools
+      yum: name=open-vm-tools
+    - name: changement bashrc
+      lineinfile:  
+        path: ~/.bashrc
+        line: PS1='\[\033[01;31m\]\u@\h\[\033[01;34m\]:\W\$\[\033[00m\] '
+        create: yes
+        #PS1='\[\033[01;31m\]\u@\h\[\033[01;34m\]:\W\$\[\033[00m\] '
+        #alias ls='ls --color=auto'
+        #alias dir='dir --color=auto'
+        #alias vdir='vdir --color=auto'
+        #alias grep='grep --color=auto'
+        #alias fgrep='fgrep --color=auto'
+        #alias egrep='egrep --color=auto'
+        #alias ll='ls -l'
+        #alias la='ls -A'
+        #alias l='ls -CF'
