@@ -1,6 +1,6 @@
 # La base centOS7
 ---
-- hosts: centos
+- hosts: all
   tasks: 
     - name: Update de centOS7
       yum: name=* state=latest
